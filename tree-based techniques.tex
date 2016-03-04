@@ -92,7 +92,7 @@ A fair number of algorithms have emerged in the last decade to validate an exper
 
 Our approach relies on meta-learning algorithm whose principle is to take the output of existing algorithms and apply a learning algorithm to improve upon their output.  In our case, the approach combines a decision tree trained on the output of Q-matrix validation algorithms with boosting, a re-sampling process in the training of the decision tree to improve its accuracy.  In this section, we first describe the Q-matrix validation techniques.
 
-\subsection{minRSS}
+\subsection{minRSS}\label{sec:minrss}
 The first technique is from \citeA{chiu2013nonparametric}.
 
 For a given Q-matrix, there is an ideal response pattern for a given a student skills mastery profile. This ideal response pattern only relies on Q-matrix given student profile. That is, if there are no slip and guess factors, then the response pattern for every category of student profile is fixed. The difference between the real response pattern and the ideal response pattern represents a measure of fit for the Q-matrix.  The most common metric for binary data is Hamming distance, that is
@@ -104,7 +104,7 @@ $$ RSS_k=\sum_{i=1}^{N}(r_{ik}-\eta_{ik})^2$$
 where $N$ is the number of respondents. Then, the item with the highest $RSS$ is chosen to update its correspondent q-vector. All the other possible q-vectors are tested to calculate their $RSS$ and the q-vector giving the lowest $RSS$ is chosen to replace the original one. That is why we name this method minRSS. The Q-matrix is changed and the whole process repeated, but the previously changed q-vector is eliminated from the next round of running. The whole procedure terminates until the $RSS$ for each item no longer changes.
 This method  was shown by \citeA{wang2015consistency} to yield good performance under different underlying conjunctive models.
 
-\subsection{maxDiff}
+\subsection{maxDiff}\label{sec:maxdiff}
 Under the setting of DINA model, for every item $j$, there are two model parameters, slip $s_j$ and guess $g_j$. \citeA{de2008empirically} proposed that a correctly specified q-vector for item $j$ should maximize the difference of probabilities of correct response between examinees who have all the required attributes and those who do not. That is, $q_j$ is the correct q-vector if
 \begin{equation} 
 \begin{split}
@@ -116,7 +116,7 @@ q_j & =\argmax_{\alpha _l}[P(X_j=1|\xi_{ll'}=1)-P(X_j=1|\xi_{ll'}=0)]
 where $\xi_{ll'}=\prod_{k=1}^{K}\alpha_{l'k}^{\alpha_{lk}}$ for $K$ total number of skills. An interesting observation is that since $P(X_j=1|\xi_{ll'}=1)=1-s_j$ and $P(X_j=1|\xi_{ll'}=0)=g_j$, then $$q_j=\argmax_{\alpha _l}[1-(s_j+g_j)]$$ 
 that is, maximizing the difference is equivalent to minimize the sum of the slip and guess parameters. A natural idea is to test all q-vectors to find the maximum $\delta_{jl}$ but that is computationally expensive. \citeA{de2008empirically} proposed a greedy algorithm that adds skills into a q-vector sequentially. First, $\delta_{jl}$ is calculated for all q-vectors which contains only one skill and the one with biggest $\delta_{jl}$ is chosen. Then, $\delta_{jl}$ is calculated for all q-vectors which contains two skills including the previously chosen one. Again the q-vector with the biggest $\delta_{jl}$ is chosen. This whole process is repeated until no addition of skills increases $\delta_{jl}$. However, this algorithm requires knowing $s_j$ and $g_j$ in advance. For real data, they are calculated by EM (Expectation Maximization) algorithm \cite{de2009dina}.  
 
-\subsection{ALSC}
+\subsection{ALSC}\label{sec:alsc}
 ALSC (Conjunctive Alternating Least Square Factorization) is a common matrix Factorization (MF). \citeA{desmarais2013matrix} proposed to factorize student test results into a Q-matrix and a skils-student matrix with ALSC. 
 
 Contrary to the other two methods, it does not rely on the DINA model as it has no slip and guess parameters.  ALSC decomposes the results matrix $\mathbf{R}_{m \times n}$ of~$m$ items by~$n$ students as the inner product two smaller matrices:
@@ -137,27 +137,21 @@ And so on until convergence.  Alternating between equations~(\ref{eq:shat}) and~
 
 \subsection{Decision Tree}
 
-Decision tree is a well-know technique in machine learning and it often serves as an ensemble learning algorithm to combine individual models into a more powerful model. It uses a set of feature variables (individual model predictions) to predict a single target variable (output variable). There are several decision tree algorithms, such as ID3 \cite{quinlan1986induction}, C4.5 \cite{quinlan1993c4}, CART \cite{breiman1984classification}. We used \texttt{rpart} function from R package of the same name \cite{therneau2015rpart}. It implements the CART algorithm. This algorithm divides the learning process into two phases. The first phase is for feature selection, or tree growing, during which the feature variables are chosen sequentially according to Gini impurity\cite{murphy2012machine}. Then in the second phase, the pruning phase, deep branches are divided into wider ones to avoid overfitting. 
+Decision tree is a well-know technique in machine learning and it often serves as an ensemble learning algorithm to combine individual models into a more powerful model. It uses a set of feature variables (individual model predictions) to predict a single target variable (output variable). There are several decision tree algorithms, such as ID3 \cite{quinlan1986induction}, C4.5 \cite{quinlan1993c4}, CART \cite{breiman1984classification}. We used \texttt{rpart} function from the R package of the same name \cite{therneau2015rpart}. It implements the CART algorithm. This algorithm divides the learning process into two phases. The first phase is for feature selection, or tree growing, during which the feature variables are chosen sequentially according to Gini impurity \cite{murphy2012machine}. Then in the second phase, the pruning phase, deep branches are split into wider ones to avoid overfitting. 
 
-A decision tree is a supervised learning technique and therefore requires training data. To obtain the training data of sufficient size, \citeA{desmarais2015combining} use synthetic data from Q-matrices generated by permutations of the perturbated Q-matrix. Since the ground-truth Q-matrix of synthetic data is known, it becomes possible to generate training data with the class label.  The training set for decision tree can take this form:
+A decision tree is a supervised learning technique and therefore requires training data. To obtain training data of sufficient size, \citeA{desmarais2015combining} use synthetic data from Q-matrices generated by permutations of the perturbated Q-matrix. Since the ground-truth Q-matrix of synthetic data is known, it becomes possible to generate training data containing the class label.  The training set for decision tree can take this form:
 
-\begin{tabular}{ c| c c c c}
- & \multicolumn{3}{c}{Algorithm target prediction}\\
-\cline{2-4}
-  Target & minRSS & maxDiff & ALSC &...\\
+\begin{tabular}{ c| c c c l c}
+ & \multicolumn{3}{c}{Algorithm target prediction} & & Other factors\\
+\cline{2-4} \cline{6-6}
+  Target & minRSS & maxDiff & ALSC && ...\\
   \hline
-  1 & 1 & 0 & 1 & ...\\
-  0 & 0 & 1 & 0 & ...\\
-  ... &... &... &... &...\\
+  1 & 1 & 0 & 1 &&  ...\\
+  0 & 0 & 1 & 0 &&  ...\\
+  ... &... &... &... && ...\\
 \end{tabular}
 
-If we consider permuting the original matrix and make it to be the ground-truth matrix, then we can largely increase the number of training samples. The idea behind is that the Q-matrix might have property of rigidity, which might be invariant under perturbation. Besides of the three validation methods, some other feature variables were also considered, including number of skills per row (SR), number of skills per column (SC). Moreover, Desmarais et al.\ defined a new feature named stickiness which measures the rigidity of cells under each validation methods. Finally, three decision tree formulas were tested including:
-\begin{itemize}\raggedright
-\item[(1)] DT1: minRSS+maxDiff+ALSC
-\item[(2)] DT2: minRSS+maxDiff+ALSC+SR+SC
-\item[(3)] DT3: minRSS+maxDiff+ALSC+SR+SC+\linebreak Stickiness.minRSS+Stickiness.maxDiff+\linebreak Stickiness.ALSC
-\end{itemize}
-DT3 was shown to outperform the other two, thus we applied boosting on DT3 in this paper (hereforth simply referred to as~DT).
+The other factors considered to help the decision tree to improve prediction are the number of skills per row (SR), number of skills per column (SC). Moreover, a feature named \textit{stickiness} which measures the rigidity of cells under each validation methods. Stickiness represents the rate of a given algorithm's false positives for a given cell of a Q-matrix.  The rate is measured by ``perturbating'' in turn each and every cell of the Q-matrix, and by counting the number of times the cell is a false positive.  The decision tree can use the stickiness factor as an indicator of the reliability of a given Q-matrix refinement algorithm suggested value for a cell.  Obviously, if a cell's stickiness value is high, the reliability of the algorithm's suggestion will be lower.  
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Boosting}
@@ -170,12 +164,17 @@ in which $G_m(x)$ and $\alpha_m$  are the learners and their correspondent coeff
 $$ Loss=\sum\limits_{i=1}^NL(y_i,f(x_i))$$
 Different ways of choosing loss function $L$ yield different boosting algorithm. The most famous algorithm for boosting is Adaboost \cite{freund1997decision}, which is especially set for binary classification problem and uses exponential loss. 
 
-Boosting has had stunning empirical success \cite{caruana2006empirical} and it can be interpreted as a form of gradient descent in function space \cite{breiman1998arcing}. More detailed explanation and analysis of boosting can be found in \citeA{buhlmann2007boosting}and \citeA{hastie2009elements}. Adaboost algorithm is used in this research to improve the results obtained by \citeA{desmarais2015combining}. The results are reported in section~\ref{sec:result}.
+Boosting has had stunning empirical success \cite{caruana2006empirical} and it can be interpreted as a form of gradient descent in function space \cite{breiman1998arcing}. More detailed explanation and analysis of boosting can be found in \citeA{buhlmann2007boosting}and \citeA{hastie2009elements}. 
+
+The Adaboost algorithm is used in this research to improve the results obtained by \citeA{desmarais2015combining}. The results are reported in section~\ref{sec:result}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Methodology and Performance Criterion}
+
+The general methodology consists in inserting one or many \textit{perturbations} in a Q-matrix and to apply the three algorithms described in sections~\ref{sec:minrss} to~\ref{sec:alsc} to recover the original non perturbated matrix.
+
 \subsection{Adaboost}
-We applied Adaboost on the DT3 strategy and test it on both synthetic and real data. In this experiment, only one perturbation is introduced.  For synthetic data, the ``correct'' matrix is known and is the one used in the generation of the data.  For real data, we assume the expert is the correct one, albeit it may contain errors.
+We applied Adaboost on the the decision tree strategy and test it on both synthetic and real data. In this experiment, only one perturbation is introduced.  For synthetic data, the ``correct'' matrix is known and is the one used in the generation of the data.  For real data, we assume the expert is the correct one, albeit it may contain errors.
 \subsection{Multi-perturbation}
 In this part, we trained the decision tree using the method described in \citeA{desmarais2015combining}, that is using the synthetic data with only one perturbation introduced. But we test the decision tree on data that has multiple perturbations.
 \subsection{Performance criterion}
