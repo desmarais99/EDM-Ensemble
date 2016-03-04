@@ -179,9 +179,9 @@ The current work extends the idea of using a decision tree with another meta-lea
 
 Boosting\cite{schapire2012boosting} is a forward stagewise additive model\cite{murphy2012machine}. It lifts a weak learner into a strong learner. The whole process is sequential. Each time the weak learner is trained, the weights of the mislearned data are increased in the loss function and fed to the next round of training. The final output is a weighted sum of all learners used in this process. That is,
 $$ f(x)=\sum\limits_{m=1}^M\alpha_mG_m(x)$$
-in which $G_m(x)$ and $\alpha_m$  are the learners and their correspondent coefficients obtained in the $m$-th step. For a training set of $N$ samples, the loss function is
+in which $G_m(x)$ and $\alpha_m$  are the learners and their correspondent coefficients obtained in the $m$-th step. For a training set of $N$ samples and given loss function $L$, the global loss is
 $$ Loss=\sum\limits_{i=1}^NL(y_i,f(x_i))$$
-Different ways of choosing loss function yield different boosting algorithm. The most famous algorithm for boosting is Adaboost \cite{freund1997decision}, which is especially set for binary classification problem and uses exponential loss. 
+Different ways of choosing loss function $L$ yield different boosting algorithm. The most famous algorithm for boosting is Adaboost \cite{freund1997decision}, which is especially set for binary classification problem and uses exponential loss. 
 
 Boosting has stunning empirical success\cite{caruana2006empirical} and it can be interpreted as a form of gradient descent in function space\cite{breiman1998arcing}. More detailed explanation and analysis of boosting can be found in \citeA{buhlmann2007boosting}and \citeA{hastie2009elements}. Adaboost algorithm is used in this research to improve the results obtained by \citeA{desmarais2015combining}. The results are reported in section~\ref{sec:result}.
 
