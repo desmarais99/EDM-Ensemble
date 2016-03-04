@@ -196,17 +196,16 @@ In order to measure the performance of the Q-matrix refinement, we borrow the no
 
 Let us define the following four categories of correct and incorrect classifications:
 \begin{compactitem}
-\item \textbf{True Positives (TP)}: perturbed cell correctly recovered
+\item \textbf{True Positives (TP)}: perturbed cell correctly changed
 \item \textbf{True Negatives (TN)}: non perturbed cell left unchanged
-\item \textbf{False Positives (FP)}: non perturbed cell incorrectly recovered
+\item \textbf{False Positives (FP)}: non perturbed cell incorrectly changed
 \item \textbf{False Negatives (FN)}: perturbed cell left unchanged
 \end{compactitem}
 We define recall as the correct recovery of perturbed cells:
  $$ \mathrm{recall}=\frac{\textrm{TP}}{\textrm{TP}+\textrm{FN}}$$
-Precision applies to the non perturbed cells.  We do not use the standard measure $TP / (TP + FP)$ because it does not provide a strong enough penalty for false negatives. Suggesting incorrect changes to non perturbed cells are in practice highly disrupting to an expert who wants to refine a Q-matrix.  For eg., suggesting 15 incorrect changes on a matrix of 30 unperturbed cells still gives a precision score of 0.5 (1/2 of the non perturbed cells are correctly left unchanged), but it considerably undermines the usefullness of the technique.
+Precision applies to the non perturbed cells.  We do not use the standard measure $TP / (TP + FP)$ because it does not provide a strong enough penalty for false positives. Suggesting incorrect changes to non perturbed cells are in practice disrupting to an expert who wants to refine a Q-matrix, even in small numbers.  For eg., suggesting 5 incorrect changes on a $11\times 3$ matrix containing 30~unperturbed cells still gives a precision score of~0.83 (25/30 of the non perturbed cells are correctly left unchanged), but it considerably undermines the value of the recommended changes.
 
 We therefore define a function that better reflects the utility of refinements with regards to FP:
-
 \begin{align}
 \mathrm{precision} & =  f(x, p, n, \delta) \label{eq:precision} \\
 f(x, p, n, \delta) & =  1- \left( 1 +  \mathrm{exp}\left( \frac{-\delta (x/p - 1)}{x(1-x/(n-p))} \right) \right)^{-1} \nonumber
@@ -220,18 +219,15 @@ Where:
 \item[$\delta$:] slope factor to adjust the rate of penalty on precision as a function of the number of FP
 \end{compactitem}
 
-\note{Describe the slope parameters used here.}
-
 \begin{figure}
   \centerline{\includegraphics[width=\columnwidth]{precision-measure.pdf}}
   \caption{Precision as a function of False Positives from equation \ref{eq:precision}}
   \label{fig:precision}
 \end{figure}
 
-Figure \ref{fig:precision} shows the precision as a function of the number of FP for different number of perturbations, $p$, and under different~$\delta$ parameters.  Precision is 1 when no FP are introduced, and 0 when all non perturbated cells are suggested for change.  The x-axis stops at 10 since 10~FP is close to the maximum we ever get.  When the number of FP is equal to the number of perturbations, precision is set to be 0.5. The $\delta$ parameter sets the rate at which the precision is penalized as a function of FP.
+Figure \ref{fig:precision} shows the precision as a function of the number of FP for different number of perturbations, $p$, and under different~$\delta$ parameters.  Precision is 1 when no FP are introduced, and 0 when all non perturbated cells are suggested for change.  The x-axis stops at~10 since this value is close to the maximum number of FP we ever get.  When the number of FP is equal to the number of perturbations, precision is set to be 0.5. The $\delta$ parameter sets the rate at which the precision is penalized as a function of FP.
 
 The $\delta$ values used in this experiment correspond to the ones in figure~\ref{fig:precision}:
-
 \begin{equation*}
 \delta = \left\lbrace 
 \begin{array}{lll}
@@ -243,7 +239,8 @@ The $\delta$ values used in this experiment correspond to the ones in figure~\re
 \right.
 \end{equation*}
 
-The values of $delta$ and the intercept at 0.5 precision when FP equals the number are both subjective judgment calls and they reflect the authors assessment of the precision penalty.  But regardless of the values, the choice does not substantially affect relative performance of the algorithms studied and the general conclusions.
+The choice of the shape of equation~(\ref{eq:precision})'s function $f$ and of $\delta$ values are judgment calls and they reflect the authors assessment of the precision penalty.  As a comparison, if we had 4~FP for a single perturbation, under the standard definition we get $\mathrm{precision}=26/30=87\%$ for a $11 \times 3$ Q-matrix. Under the current definition, we get $\mathrm{precision}=f(4,1,33,1)=30\%$, the later figure representing a much more reasonable assessment of the utility of having that number of FP for a single perturbation Q-matrix.
+%But regardless of the values, the choice does not substantially affect relative performance of the algorithms studied and the general conclusions.
 
 Based on the above definitions of precision and recall, an $F_\beta$-score is used:
 $$ F_\beta=(1+\beta^2)\cdot \frac{precision \cdot recall}{\beta^2precision + recall}$$

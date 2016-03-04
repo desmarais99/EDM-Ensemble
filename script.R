@@ -31,9 +31,10 @@ xyplot(qlogis(nonpert) ~ Perturbation|QM, m, type=c('p','l'), group=m$Algorithms
 ##' @param X Number of perturbations
 ##' @param N Total number of cells
 ##' @param s Delta: slope factor to adjust the rate of penalty on precision as a function of the number of FP
+##' @param i Offset
 ##' @return precision
 ##' @author michel
-f <- function(x,X,N,s) 1 - plogis((x/X-1)/x/(1-x/(N-X)), scale=1/s)
+f <- function(x,X,N,s,i=0) 1 - plogis((x/X-1+i)/x/(1-x/(N-X)), scale=1/s)
 
 pdf('precision-measure.pdf',width=6,height=6)
 
@@ -63,17 +64,52 @@ dev.off()
 pdf('precision-measure.pdf',width=6,height=6)
 
 N=33
-m <- data.frame(pert=c(1:5,10),delta=c(1,2,2,2,2,3),col='steelblue',grid=c(T,F,F,F,F,F),lty=c(1,2,2,2,2,3))
+m <- data.frame(pert=c(1:5,10),delta=c(1,2,3,4,4,4),col='steelblue',grid=c(T,F,F,F,F,F),lty=c(1,2,3,4,4,4))
 foo <- apply(m, 1, function(i) {
     if(grepl('T',(i['grid']))) {
-        plot(function(x) f(x,as.numeric(i['pert']),N,as.numeric(i['delta'])),xlim=c(0,N-as.numeric(i['pert'])),ylab='Precision',xlab='FP',col=i['col'],lwd=2,lty=as.numeric(i['lty']))
+        plot(function(x) f(x,as.numeric(i['pert']),N,as.numeric(i['delta'])),ylim=c(0.2,1),xlim=c(0,10),ylab='Precision',xlab='FP',col=i['col'],lwd=2,lty=as.numeric(i['lty']))
         grid()
-        abline(h=0.5,col='grey80')
+        abline(h=0.5,col='grey80',lwd=2)
     } else {
         plot(function(x) f(x,as.numeric(i['pert']),N,as.numeric(i['delta'])),xlim=c(0,N-as.numeric(i['pert'])),ylab='Precision',xlab='FP',col=i['col'],lwd=2,lty=as.numeric(i['lty']),add=T)
     }
 })
-legend('topright', c(expression(delta==1,delta==2,delta==3)),
-       lty=1:3, lwd=2, col='steelblue', bg='gray90')
+legend('topright', c(expression(delta==1,delta==2,delta==3,delta==4)),
+       lty=1:4, lwd=2, col='steelblue', bg='gray90')
+text(.25,0.52,'0.5',col='gray70')
+text(7,0.6,'p=10',col='steelblue')
+text(7,0.46,'p=5',col='steelblue')
+text(7,0.39,'p=4',col='steelblue')
+text(7,0.34,'p=3',col='steelblue')
+text(7,0.3,'p=2',col='steelblue')
+text(7,0.26,'p=1',col='steelblue')
+
+dev.off()
+
+
+#############################################################################
+## Precision function revised
+#############################################################################
+
+pdf('precision-measure.pdf',width=6,height=6)
+
+N=33
+m <- data.frame(pert=c(1:5,10),delta=c(1,2,3,4,4,4),col='steelblue',grid=c(T,F,F,F,F,F),lty=c(1,2,3,4,4,4))
+foo <- apply(m[1:4,], 1, function(i) {
+    if(grepl('T',(i['grid']))) {
+        plot(function(x) f(x,as.numeric(i['pert']),N,as.numeric(i['delta'])),ylim=c(0.2,1),xlim=c(0,10),ylab='Precision',xlab='FP',col=i['col'],lwd=2,lty=as.numeric(i['lty']))
+        grid()
+        abline(h=0.5,col='grey80',lwd=2)
+    } else {
+        plot(function(x) f(x,as.numeric(i['pert']),N,as.numeric(i['delta'])),xlim=c(0,10),ylab='Precision',xlab='FP',col=i['col'],lwd=2,lty=as.numeric(i['lty']),add=T)
+    }
+})
+legend('topright', c(expression(delta==1,delta==2,delta==3,delta==4)),
+       lty=1:4, lwd=2, col='steelblue', bg='gray90')
+text(.25,0.52,'0.5',col='gray70')
+i=4;text(5,f(5,i,33,i)+.025,paste0('p=',i),col='steelblue')
+i=3;text(5,f(5,i,33,i)+.025,paste0('p=',i),col='steelblue')
+i=2;text(5,f(5,i,33,i)+.025,paste0('p=',i),col='steelblue')
+i=1;text(5,f(5,i,33,i)+.025,paste0('p=',i),col='steelblue')
 
 dev.off()
