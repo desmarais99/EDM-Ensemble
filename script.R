@@ -37,20 +37,43 @@ f <- function(x,X,N,s) 1 - plogis((x/X-1)/x/(1-x/(N-X)), scale=1/s)
 
 pdf('precision-measure.pdf',width=6,height=6)
 
-delta=2;pert1=1;pert5=5;N=33
-plot(function(x) f(x,pert1,N,delta),xlim=c(0,N-pert),ylab='Precision',xlab='FP',col='chocolate1',lwd=2,lty=1);grid()
-plot(function(x) f(x,pert1,N,delta*2),xlim=c(0,N-pert),ylab='Precision',xlab='FP',col='chocolate2',lwd=2,lty=2,add=T)
-plot(function(x) f(x,pert1,N,delta/2),xlim=c(0,N-pert),ylab='Precision',xlab='FP',col='chocolate3',lwd=2,lty=3,add=T)
+delta=2;pert1=3;pert5=4;N=33
+plot(function(x) f(x,pert1,N,delta),xlim=c(0,N-pert1),ylab='Precision',xlab='FP',col='chocolate1',lwd=2,lty=1);grid()
+plot(function(x) f(x,pert1,N,delta*2),xlim=c(0,N-pert1),ylab='Precision',xlab='FP',col='chocolate2',lwd=2,lty=2,add=T)
+plot(function(x) f(x,pert1,N,delta/2),xlim=c(0,N-pert1),ylab='Precision',xlab='FP',col='chocolate3',lwd=2,lty=3,add=T)
 plot(function(x) f(x,pert5,N,delta),xlim=c(0,N-pert5),ylab='Precision',xlab='FP',col='steelblue1',lwd=2,lty=1,add=T)
 plot(function(x) f(x,pert5,N,delta*2),xlim=c(0,N-pert5),ylab='Precision',xlab='FP',col='steelblue2',lwd=2,lty=2,add=T)
 plot(function(x) f(x,pert5,N,delta/2),xlim=c(0,N-pert5),ylab='Precision',xlab='FP',col='steelblue3',lwd=2,lty=3,add=T)
-legend('topright', c(expression(paste(x==1, ', ', delta==2)),
-               expression(paste(x==1, ', ', delta==4)),
-               expression(paste(x==1, ', ', delta==1)),
-               expression(paste(x==5, ', ', delta==2)),
-               expression(paste(x==5, ', ', delta==4)),
-               expression(paste(x==5, ', ', delta==1))
+legend('topright', c(expression(paste(x==1, ', ', delta==delta)),
+               expression(paste(x==1, ', ', delta==delta*2)),
+               expression(paste(x==1, ', ', delta==delta/2)),
+               expression(paste(x==5, ', ', delta==delta)),
+               expression(paste(x==5, ', ', delta==delta*2)),
+               expression(paste(x==5, ', ', delta==delta/2))
                ),
        lty=c(1,2,3,1,2,3), lwd=2, col=c('chocolate1','chocolate2','chocolate3','steelblue1','steelblue2','steelblue3'), bg='gray90')
+
+dev.off()
+
+
+#############################################################################
+## Actual values version
+#############################################################################
+
+pdf('precision-measure.pdf',width=6,height=6)
+
+N=33
+m <- data.frame(pert=c(1:5,10),delta=c(1,2,2,2,2,3),col='steelblue',grid=c(T,F,F,F,F,F),lty=c(1,2,2,2,2,3))
+foo <- apply(m, 1, function(i) {
+    if(grepl('T',(i['grid']))) {
+        plot(function(x) f(x,as.numeric(i['pert']),N,as.numeric(i['delta'])),xlim=c(0,N-as.numeric(i['pert'])),ylab='Precision',xlab='FP',col=i['col'],lwd=2,lty=as.numeric(i['lty']))
+        grid()
+        abline(h=0.5,col='grey80')
+    } else {
+        plot(function(x) f(x,as.numeric(i['pert']),N,as.numeric(i['delta'])),xlim=c(0,N-as.numeric(i['pert'])),ylab='Precision',xlab='FP',col=i['col'],lwd=2,lty=as.numeric(i['lty']),add=T)
+    }
+})
+legend('topright', c(expression(delta==1,delta==2,delta==3)),
+       lty=1:3, lwd=2, col='steelblue', bg='gray90')
 
 dev.off()

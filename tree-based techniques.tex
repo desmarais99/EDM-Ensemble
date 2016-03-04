@@ -178,7 +178,7 @@ We applied Adaboost on the DT3 strategy and test it on both synthetic and real d
 \subsection{Multi-perturbation}
 In this part, we trained the decision tree using the method described in \citeA{desmarais2015combining}, that is using the synthetic data with only one perturbation introduced. But we test the decision tree on data that has multiple perturbations.
 \subsection{Performance criterion}
-In order to measure the performance of the Q-matrix refinement, we borrow the notion of \textit{recall} and \textit{precision}, akin to \citeA{desmarais2015combining}, which allows us to use the F-score for the combined performance assessment. However, \citeA{desmarais2015combining} studied only single perturbations and their measure of precision does not extend well to multiple perturbations and we introduce a better measure for the precision criterion.  Details are provided below.
+In order to measure the performance of the Q-matrix refinement, we borrow the notion of \textit{recall} and \textit{precision}, akin to \citeA{desmarais2015combining}, which allows us to use the F-score for the combined performance assessment. However, \citeA{desmarais2015combining} studied only single perturbations and their measure of precision does not extend well to multiple perturbations. We introduce a new measure for the precision criterion below.
 
 Let us define the following four categories of correct and incorrect classifications:
 \begin{compactitem}
@@ -187,16 +187,16 @@ Let us define the following four categories of correct and incorrect classificat
 \item \textbf{False Positives (FP)}: non perturbed cell incorrectly recovered
 \item \textbf{False Negatives (FN)}: perturbed cell left unchanged
 \end{compactitem}
-Recall applies to the correct recovery of perturbed cells and is defined as:
+We define recall as the correct recovery of perturbed cells:
  $$ \mathrm{recall}=\frac{\textrm{TP}}{\textrm{TP}+\textrm{FN}}$$
-Precision applies to the non perturbed cells.  We do not use the standard measure $TP / (TP + FP)$ because it does not provide a strong enough penalty for false negatives. Suggesting incorrect changes to non perturbed cells are in practice highly disrupting to an expert who wants to refine a Q-matrix.  For eg., suggesting 15 incorrect changes on a matrix of 30 cells still gives a precision score of 0.5 (1/2 of the non perturbed cells are correctly left unchanged), but it considerably undermines the usefullness of the technique.
+Precision applies to the non perturbed cells.  We do not use the standard measure $TP / (TP + FP)$ because it does not provide a strong enough penalty for false negatives. Suggesting incorrect changes to non perturbed cells are in practice highly disrupting to an expert who wants to refine a Q-matrix.  For eg., suggesting 15 incorrect changes on a matrix of 30 unperturbed cells still gives a precision score of 0.5 (1/2 of the non perturbed cells are correctly left unchanged), but it considerably undermines the usefullness of the technique.
 
 We therefore define a function that better reflects the utility of refinements with regards to FP:
 
-\begin{eqnarray}
-\mathrm{precision} & = & f(x, p, n, \delta) \\
-f(x, p, n, \delta) & = & 1- \left( 1 +  \mathrm{exp}\left( \frac{-\delta (x/p - 1)}{x(1-x/(n-p))} \right) \right)^{-1} \label{eq:precision}
-\end{eqnarray}
+\begin{align}
+\mathrm{precision} & =  f(x, p, n, \delta) \label{eq:precision} \\
+f(x, p, n, \delta) & =  1- \left( 1 +  \mathrm{exp}\left( \frac{-\delta (x/p - 1)}{x(1-x/(n-p))} \right) \right)^{-1} \nonumber
+\end{align}
 
 Where:
 \begin{compactitem}
@@ -212,7 +212,22 @@ Where:
   \label{fig:precision}
 \end{figure}
 
-Figure \ref{fig:precision} shows the precision as a function of the number of FP for 1 and 5 perturbations, under three different~$\delta$ parameters each.  Precision is 1 when no FP are introduced, and 0 when all non perturbated cells are suggested for change.  When the number of FP is equal to the number of perturbations, precision is set to be 0.5. The $\delta$ parameter sets the rate at which the precision is penalized as a function of FP.  Different values of $\delta$ are used in this experiment and they reflect the authors assessment of the precision penalty.  The values of $delta$ and the intercept at 0.5 precision when FP equals the number are both subjective judgment calls, but they do not substantially affect relative performance of the algorithms studied and the general conclusions.
+Figure \ref{fig:precision} shows the precision as a function of the number of FP for different number of perturbations, $p$, and under different~$\delta$ parameters.  Precision is 1 when no FP are introduced, and 0 when all non perturbated cells are suggested for change.  The x-axis stops at 10 since 10~FP is close to the maximum we ever get.  When the number of FP is equal to the number of perturbations, precision is set to be 0.5. The $\delta$ parameter sets the rate at which the precision is penalized as a function of FP.
+
+The $\delta$ values used in this experiment correspond to the ones in figure~\ref{fig:precision}:
+
+\begin{equation*}
+\delta = \left\lbrace 
+\begin{array}{lll}
+  1 & \mathrm{if} & x = 1\\
+  2 & \mathrm{if} & x = 2\\
+  3 & \mathrm{if} & x = 3\\
+  4 & \mathrm{if} & x > 3\\
+\end{array}
+\right.
+\end{equation*}
+
+The values of $delta$ and the intercept at 0.5 precision when FP equals the number are both subjective judgment calls and they reflect the authors assessment of the precision penalty.  But regardless of the values, the choice does not substantially affect relative performance of the algorithms studied and the general conclusions.
 
 Based on the above definitions of precision and recall, an $F_\beta$-score is used:
 $$ F_\beta=(1+\beta^2)\cdot \frac{precision \cdot recall}{\beta^2precision + recall}$$
