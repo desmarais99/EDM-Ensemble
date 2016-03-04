@@ -113,3 +113,36 @@ i=2;text(5,f(5,i,33,i)+.025,paste0('p=',i),col='steelblue')
 i=1;text(5,f(5,i,33,i)+.025,paste0('p=',i),col='steelblue')
 
 dev.off()
+
+#############################################################################
+## Peng's version
+#############################################################################
+
+f <- function(x,p,n,s) 1/(1 + exp(-s*n*(p-x)/(x*(n-p-x))))
+
+pdf('r-precision-measure.pdf',width=6,height=6)
+
+N=33
+m <- data.frame(pert=c(1:4,5,7,10),delta=c(1,1,1,1,.5,.5,.5),col='steelblue',grid=c(T,F,F,F,F,F,F),lty=c(1,1,1,1,2,2,2))
+foo <- apply(m, 1, function(i) {
+    if(grepl('T',(i['grid']))) {
+        plot(function(x) f(x,as.numeric(i['pert']),N,as.numeric(i['delta'])),ylim=c(0,1),xlim=c(0,15),ylab='R-precision',xlab='FP',col=i['col'],lwd=2,lty=as.numeric(i['lty']))
+        grid()
+        abline(h=0.5,col='grey80',lwd=2)
+    } else {
+        plot(function(x) f(x,as.numeric(i['pert']),N,as.numeric(i['delta'])),xlim=c(0,15),ylab='R-precision',xlab='FP',col=i['col'],lwd=2,lty=as.numeric(i['lty']),add=T)
+    }
+})
+legend('topright', c(expression(delta==1,delta==0.5)),
+       lty=1:2, lwd=2, col='steelblue', bg='gray90')
+text(.25,0.52,'0.5',col='gray70')
+xoff=-.2;yp=.43;yp2=.55
+i=10;text(9.2,.55,i,col='steelblue')
+i=7;text(6.3,.55,i,col='steelblue')
+i=5;text(4.3,.55,i,col='steelblue')
+i=4;text(i+xoff+.7,yp+.005,i,col='steelblue')
+i=3;text(i+xoff+.55,yp+.005,i,col='steelblue')
+i=2;text(i+xoff+.4,yp+.005,i,col='steelblue')
+i=1;text(i+xoff-.1,yp,paste0('p = ',i),col='steelblue')
+
+dev.off()

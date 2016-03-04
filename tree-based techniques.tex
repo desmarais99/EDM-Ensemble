@@ -171,7 +171,7 @@ The Adaboost algorithm is used in this research to improve the results obtained 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Methodology and Performance Criterion}
 
-The general methodology consists in inserting one or many \textit{perturbations} in a Q-matrix and to apply the three algorithms described in sections~\ref{sec:minrss} to~\ref{sec:alsc} to recover the original non perturbated matrix.
+The general methodology consists in inserting one or many \textit{perturbations} in a Q-matrix and to apply the three algorithms described in sections~\ref{sec:minrss} to~\ref{sec:alsc} to recover the original non perturbated matrix.  The \textit{stickiness} factor is computed over each matrix and each algorithm by this perturbation process based on a single perturbation at a time and for each cell of the matrix in turn.  For example, for a $3\times 11$ matrix, the stickiness of cell~$(i,j)$ will be $FP_{i,j}/32$, where~$FP_{i,j}$ is the number of times that this cell was a false positive when each of the other is perturbated in turn.
 
 \subsection{Adaboost}
 We applied Adaboost on the the decision tree strategy and test it on both synthetic and real data. In this experiment, only one perturbation is introduced.  For synthetic data, the ``correct'' matrix is known and is the one used in the generation of the data.  For real data, we assume the expert is the correct one, albeit it may contain errors.
@@ -211,16 +211,14 @@ where:
   \label{fig:r-precision}
 \end{figure}
 
-Figure \ref{fig:r-precision} shows the r-precision as a function of the number of FP for different number of perturbations, $p$, and under different~$\delta$ parameters.  R-precision is 1 when no FP are introduced, and 0 when all non perturbated cells are suggested for change.  The x-axis stops at~10 since this value is close to the maximum number of FP we ever get.  When the number of FP is equal to the number of perturbations, r-precision is set to be 0.5. The $\delta$ parameter sets the rate at which the r-precision is penalized as a function of FP.
+Figure \ref{fig:r-precision} shows the r-precision as a function of the number of FP for different number of perturbations, $p$, and under different~$\delta$ parameters.  R-precision is 1 when no FP are introduced, and 0 when all non perturbated cells are suggested for change.  The x-axis stops at~15 since the number of FP rarely gets over~10 under any condition.  When the number of FP is equal to the number of perturbations, r-precision is set to be 0.5. The $\delta$ parameter sets the rate at which the r-precision is penalized as a function of FP.
 
 The $\delta$ values used in this experiment correspond to the ones in figure~\ref{fig:r-precision}:
 \begin{equation*}
 \delta = \left\lbrace 
 \begin{array}{lll}
-  1 & \mathrm{if} & x = 1\\
-  2 & \mathrm{if} & x = 2\\
-  3 & \mathrm{if} & x = 3\\
-  4 & \mathrm{if} & x > 3\\
+  1 & \mathrm{if} & x \leq 4\\
+  0.5 & \mathrm{if} & x > 4\\
 \end{array}
 \right.
 \end{equation*}
@@ -358,7 +356,7 @@ The results of applying Adaboost over the decision tree (DT) are reported in tab
 
 Let us focus on the F-Score which is the most informative since it combines results of the perturbed and non perturbed cells of the Q-matrix.  For synthetic data, the error reduction of boosting over the gain from the decision tree is substantially improved for all Q-matrices. The range of improvement is from 7\% to 100\%.  For real data, two of the four Q-matrices show substantial improvements of around 40\%, whereas the other two show no improvements, even a decrease of 9\% for Q-matrix~3 which is characterized by a single skill per item.  Note however that we assume the expert Q-matrices are correct and that violation of this assumption could negatively affect some of the Q-matrices scores for real data.
 
-The results of multi-perturbation experiment are reported in figures 1,2 and 3. An amazing fact is the curves of the algorithms we used are basically stable...
+The results of multi-perturbation experiment are reported in figures \ref{fig:acc-pert}, \ref{fig:acc-non-pert} and \ref{fig:realf}. An amazing fact is the curves of the algorithms we used are basically stable...***
 \begin{figure*}
   \centering
     \includegraphics[width=0.75\textwidth]{real_pert_acc.pdf}
@@ -374,7 +372,7 @@ The results of multi-perturbation experiment are reported in figures 1,2 and 3. 
 \begin{figure*}
   \caption{Logit F1-score for real data.}
   \centering
-    \includegraphics[width=0.75\textwidth]{real_Fscore.pdf}
+    \includegraphics[width=0.75\textwidth]{real_Fscore.pdf}\label{fig:realf}
 \end{figure*}
 
 
