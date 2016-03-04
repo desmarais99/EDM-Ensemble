@@ -139,7 +139,17 @@ And so on until convergence.  Alternating between equations~(\ref{eq:shat}) and~
 
 \note{The decision trees used need to be better described here.  Notice that the decision trees are the contributions and only one paragraph is devoted to it, wheras a full page is devoted to the three algorithms which are of secondary importance since any algorithm could be used as long as they pick up on different information and are likely to be complementary.}
 
- \citeA{desmarais2015combining} proposed a way to combine the three techniques mentioned above in the framework of a decision tree. The idea is to convert the Q-matrix validation problem into a supervised learning problem. This task is achieved by repeatedly using the data in Q-matrix. The idea behind is that the Q-matrix might have property of rigidity, which might be invariant under perturbation. For each record of the training set, the data of target variable is consisted of entries of real Q-matrix and the feature variables are the entries of Q-matrix offered by different validation methods starting from a perturbated Q-matrix. Besides of the three validation methods, some other feature variables were also considered including number of skills per row (SR), number of skills per column (SC). Moreover, Desmarais et al.\ defined a new feature named stickiness which measures the rigidity of cells under each validation methods. Finally, three decision tree formulas were tested including:
+Decision tree is a well-know technique in machine learning and it is often served as an ensemble learning way to combine individual models into a more powerful model. It uses a set of feature variables(individual model predictions) to predict a single target variable(output variable). There are several algorithms to implement decision tree, such as ID3\cite{quinlan1986induction}, C4.5\cite{quinlan1993c4}, CART\cite{breiman1984classification}. We used 'rpart' function from R package 'rpart'\cite{therneau2015rpart} for implementation. It implements CART algorithm. Basically, this algorithm divided the whole learning process into two phases. The first phase is feature selection or tree growing during which the feature variables are chosen sequentially according to Gini impurity\cite{murphy2012machine}. Then in the second phase, the pruning phase, deep brunches would be cut to avoid overfitting. 
+
+Decision tree is essentially a supervised learning technique while the Q-matrix validation problem is basically an unsupervised learning problem. To tackle this problem, \citeA{desmarais2015combining} proposed a way to transform the Q-matrix validation problem into a supervised learning problem. The main difficulty is to find a proper training set. This is done by repeatedly using the data from the given perturbated Q-matrix. If we perturbate one cell of this Q-matrix, then for every individual model, it would propose a new Q-matrix. Since we know the original ground-truth Q-matrix then those proposed Q-matrix can be used as feature variables and the ground-truth Q-matrix is the target variable. In order to make cell prediction, we expand all the matrices into a vector form. Then for each sample of the training set, the data of target variable is consisted of entries of real Q-matrix and the feature variables are the entries of Q-matrix offered by different validation methods starting from a perturbated Q-matrix. The training set for decision tree would be like:
+\begin{tabular}{ c| c c c c}
+  Target & minRSS & maxDiff & ALSC &...\\
+  \hline
+  1 & 1 & 0 & 1 & ...\\
+  0 & 0 & 1 & 0 & ...\\
+  ... &... &... &... &...\\
+\end{tabular}
+If we consider permuting the original matrix and make it to be the ground-truth matrix, then we can largely increase the number of training samples. The idea behind is that the Q-matrix might have property of rigidity, which might be invariant under perturbation. Besides of the three validation methods, some other feature variables were also considered, including number of skills per row (SR), number of skills per column (SC). Moreover, Desmarais et al.\ defined a new feature named stickiness which measures the rigidity of cells under each validation methods. Finally, three decision tree formulas were tested including:
 \begin{itemize}\raggedright
 \item[(1)] DT1: minRSS+maxDiff+ALSC
 \item[(2)] DT2: minRSS+maxDiff+ALSC+SR+SC
@@ -167,9 +177,13 @@ DT3 was shown to outperform the other two, thus we applied boosting on DT3 in th
 
 The current work extends the idea of using a decision tree with another meta-learning technique named boosting.
 
-Boosting is a well known technique in machine learning. It lifts a weak classifier to strong classifier. The whole process is sequential. Each time the classifier is trained, the weights of the misclassified data are increased in the loss function and fed to the next round of training. The final classifier is a weighted sum of all classifiers learned in this process. That is,
+Boosting\cite{schapire2012boosting} is a forward stagewise additive model\cite{murphy2012machine}. It lifts a weak learner into a strong learner. The whole process is sequential. Each time the weak learner is trained, the weights of the mislearned data are increased in the loss function and fed to the next round of training. The final output is a weighted sum of all learners used in this process. That is,
 $$ f(x)=\sum\limits_{m=1}^M\alpha_mG_m(x)$$
-in which $G_m(x)$ and $\alpha_m$  are the classifier and its correspondent coefficient obtained in the $m$-th step. The most famous algorithm for boosting is Adaboost \cite{freund1997decision} and it is used in this research to improve the results obtained by \citeA{desmarais2015combining}. The results are reported in section~\ref{sec:result}.
+in which $G_m(x)$ and $\alpha_m$  are the learners and their correspondent coefficients obtained in the $m$-th step. For a training set of $N$ samples, the loss function is
+$$ Loss=\sum\limits_{i=1}^NL(y_i,f(x_i))$$
+Different ways of choosing loss function yield different boosting algorithm. The most famous algorithm for boosting is Adaboost \cite{freund1997decision}, which is especially set for binary classification problem and uses exponential loss. 
+
+Boosting has stunning empirical success\cite{caruana2006empirical} and it can be interpreted as a form of gradient descent in function space\cite{breiman1998arcing}. More detailed explanation and analysis of boosting can be found in \citeA{buhlmann2007boosting}and \citeA{hastie2009elements}. Adaboost algorithm is used in this research to improve the results obtained by \citeA{desmarais2015combining}. The results are reported in section~\ref{sec:result}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Methodology and Performance Criterion}
@@ -205,6 +219,8 @@ Where:
 \item[$n$:] total number of cells of the Q-matrix
 \item[$\delta$:] slope factor to adjust the rate of penalty on precision as a function of the number of FP
 \end{compactitem}
+
+\note{Describe the slope parameters used here.}
 
 \begin{figure}
   \centerline{\includegraphics[width=\columnwidth]{precision-measure.pdf}}
