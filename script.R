@@ -91,17 +91,17 @@ dev.off()
 ## Precision function revised
 #############################################################################
 
-pdf('precision-measure.pdf',width=6,height=6)
+pdf('r-precision-measure.pdf',width=6,height=6)
 
 N=33
 m <- data.frame(pert=c(1:5,10),delta=c(1,2,3,4,4,4),col='steelblue',grid=c(T,F,F,F,F,F),lty=c(1,2,3,4,4,4))
 foo <- apply(m[1:4,], 1, function(i) {
     if(grepl('T',(i['grid']))) {
-        plot(function(x) f(x,as.numeric(i['pert']),N,as.numeric(i['delta'])),ylim=c(0.2,1),xlim=c(0,10),ylab='Precision',xlab='FP',col=i['col'],lwd=2,lty=as.numeric(i['lty']))
+        plot(function(x) f(x,as.numeric(i['pert']),N,as.numeric(i['delta'])),ylim=c(0.2,1),xlim=c(0,10),ylab='R-precision',xlab='FP',col=i['col'],lwd=2,lty=as.numeric(i['lty']))
         grid()
         abline(h=0.5,col='grey80',lwd=2)
     } else {
-        plot(function(x) f(x,as.numeric(i['pert']),N,as.numeric(i['delta'])),xlim=c(0,10),ylab='Precision',xlab='FP',col=i['col'],lwd=2,lty=as.numeric(i['lty']),add=T)
+        plot(function(x) f(x,as.numeric(i['pert']),N,as.numeric(i['delta'])),xlim=c(0,10),ylab='R-precision',xlab='FP',col=i['col'],lwd=2,lty=as.numeric(i['lty']),add=T)
     }
 })
 legend('topright', c(expression(delta==1,delta==2,delta==3,delta==4)),
