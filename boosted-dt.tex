@@ -8,25 +8,20 @@
 \usepackage{multirow}
 \usepackage{dcolumn}
 \usepackage{array}
-\usepackage[inline]{trackchanges}
+\usepackage{kbordermatrix}
 \usepackage{balance}
-%\usepackage{subfigure}
 \usepackage{float}
 \DeclareMathOperator*{\argmax}{arg\,max}
     
 \begin{document}
 
-\title{Ensemble techniques for Q-matrix Refinement}
-\numberofauthors{3}
+\title{Boosted Decision Tree for Q-matrix Refinement}
+\numberofauthors{2}
 \author{
 \alignauthor
 Peng Xu\\
        \affaddr{Polytechnique Montreal}\\
        \email{\large\sffamily peng.xu@polymtl.ca}
-\alignauthor
-Sein Minn\\
-       \affaddr{Polytechnique Montreal}\\
-       \email{\large\sffamily sein.minn@polymtl.ca}
 \alignauthor
 Michel C. Desmarais\\
        \affaddr{Polytechnique Montreal}\\
@@ -35,64 +30,20 @@ Michel C. Desmarais\\
 \maketitle
 
 \begin{abstract}
-In the last decade, several algorithms have been proposed for Q-matrix validation.  Recently, it was shown that they can be combined in an ensemble learning method to obtain a substantial gain of performance over the best algorithms in the combination. The general framework is a decision tree that is given the ouput of each algorithm along with a number of factors. Using synthetic data for which the ground truth is known, the decision tree is trained to learn how to best combine the algorithm refinements. In this paper we make two contributions to this framework. One is to use Adaboost algorithm to improve the decision tree result. The other is to extend the results over a multiperturbated Q-matrix rather than a single perturbation one as reported in past studies.
+In recent years, substantial improvements were obtained in the effectiveness of data driven algorithms to validate the mapping of items to skills, or the Q-matrix.  In the current study we use ensemble algorithms on top of existing Q-matrix refinement algorithms to improve their performance.  We combine the boosting technique with a decision tree.  The results show that the improvements from both the decision tree and Adaboost add up and yield substantial gains over the best performance of individual q-matrix refinement algorithm.
 \end{abstract}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
-A Q-matrix is a term commonly used in the literature of psychometrics and cognitive modeling that refers to a binary matrix which shows a correspondence between items and latent skills. Items can be questions or exercises proposed to students, and latent skills are considered needed to succeed these items.
+A Q-matrix, as proposed by Tatsuoka \cite{tatsuoka1983rule}, is a term commonly used in the literature of psychometrics and cognitive modeling that refers to a binary matrix which shows a correspondence between items and their latent attributes. Items can be questions or exercises proposed to students, and latent attributes are skills needed to succeed these items. Usually, a Q-matrix is defined by a domain expert. However, this task is non trivial and there might be errors, which in turn will result in erroneous diagnosis of students knowledge states \cite{rupp2008effects,madison2015effects}. Therefore, better means to validate a Q-matrix is a highly desirable goal.
 
- Usually, a Q-matrix is defined by a domain expert. However, this task is non trivial and there might be errors, which in turn will result in erroneous diagnosis of students knowledge states \cite{rupp2008effects,madison2015effects}. Therefore, better means to validate a Q-matrix is a highly desirable goal.
-
-A fair number of algorithms have emerged in the last decade to validate an expert given Q-matrix based on empirical data \cite<see for eg.~recent work from>{chen2015statistical,de2015general,xiang2013nonlinear,romero2014detection,durand2015evaluation,qin2015model,matsudamachine2015}.  Taking some of these algorithms, \citeA{desmarais2015combining} showed that Q-matrix validation algorithms can be combined using a decision tree.  This can be considered an ensemble learning, or meta-learning approach. The results show a substantial and systematic performance gain over the best algorithm, in the range of 50\% error reduction for real data.  We pursue this work along the lines of using ensemble learning, this time using using boosting, a variety of decision trees, and extending the results over multiple perturbations.
-
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% \section{Q-matrix as a factorization \rm [ not sure we should include this section]}
-
-%% To deal with this problem, there are three matrices involved. First is the directly observed response matrix looking like $R$ below for 4 students(respondents) and 9 questions(items).
-%% \begin{figure}[H]
-%% $$		R=\kbordermatrix{
-%% 	& i_1 &i_2 & i_3 &i_4 & i_5 &i_6 & i_7 &i_8 &i_9 \\
-%% r_1 & 0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 & 0\\
-%% r_2 & 1 & 0 & 0 & 1 & 0 & 1 & 0 & 0 & 0\\
-%% r_3 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1 & 1\\
-%% r_4 & 0 & 1 & 0 & 0 & 1 & 1 & 0 & 1 & 1\\
-%% }$$
-%% \end{figure}
-
-
-%% The second matrix is the profile matrix $A$ which is usually unknown and what educators want to diagnose. For the 4 students above, it might look like~\begin{figure}[h]
-%% $$A=\kbordermatrix{
-%%   & s_1 & s_2 & s_3 \\
-%% r_1 & 0 & 1 & 0\\
-%% r_2 & 1 & 1 & 0\\
-%% r_3 & 1 & 1 & 1\\
-%% r_4 & 0 & 1 & 1
-%% }$$
-%% \end{figure}
-
-
-%% And the last matrix is Q-matrix, usually expert-given, looking like $Q$ below for 9 items and 3 latent skills
-%% $$Q=\kbordermatrix{
-%% 	& s_1 & s_2 & s_3 \\
-%% i_1 & 1 & 1 & 0\\
-%% i_2 & 0 & 1 & 1\\
-%% i_3 & 1 & 0 & 1\\
-%% i_4 & 1 & 0 & 0\\
-%% i_5 & 0 & 0 & 1\\
-%% i_6 & 0 & 1 & 0\\
-%% i_7 & 1 & 1 & 1\\
-%% i_8 & 0 & 1 & 1\\
-%% i_9 & 0 & 1 & 1\\
-%% }$$
-
-%% There is plenty of literature on how to find the knowledge states of students, or to classify the students or to conduct cognitive diagnose in other terms, in fact they are basically looking for the profile matrix $A$. However, not too much research were done for Q-matrix validation among which we review three single methods and a decision tree based ensemble learning method here. 
+A fair number of algorithms have emerged in the last decade to validate an expert given Q-matrix based on empirical data \cite<see for eg.~recent work from>{chen2015statistical,de2015general}.  \citeA{desmarais2015combining} showed that Q-matrix validation algorithms can be combined using an ensemble learning technique.  They used a decision tree and the results show a substantial and systematic performance gain over the best algorithm, in the range of 50\% error reduction for real data, even though the best algorithm is not always the same for different Q-matrices.  We pursue this work along the lines of using ensemble learning, or meta learning techniques, this time using boosting over the decision tree.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{\raggedright Three techniques to Q-matrix validation}
 
-Our approach relies on meta-learning algorithms whose principle is to take the output of existing algorithms and apply a learning algorithm to improve upon their output.  Let us first describe the algorithms that will be the input to the meta-learning process.
+Our approach relies on meta-learning algorithm whose principle is to take the output of existing algorithms and apply a learning algorithm to improve upon their output.  In our case, the approach combines a decision tree trained on the output of Q-matrix validation algorithms with boosting, a re-sampling process in the training of the decision tree to improve its accuracy.  In this section, we first describe the Q-matrix validation techniques.
 
-\subsection{minRSS}\label{sec:minrss}
+\subsection{minRSS}
 The first technique is from \citeA{chiu2013nonparametric}.
 
 For a given Q-matrix, there is an ideal response pattern for a given a student skills mastery profile. This ideal response pattern only relies on Q-matrix given student profile. That is, if there are no slip and guess factors, then the response pattern for every category of student profile is fixed. The difference between the real response pattern and the ideal response pattern represents a measure of fit for the Q-matrix.  The most common metric for binary data is Hamming distance, that is
@@ -104,7 +55,7 @@ $$ RSS_k=\sum_{i=1}^{N}(r_{ik}-\eta_{ik})^2$$
 where $N$ is the number of respondents. Then, the item with the highest $RSS$ is chosen to update its correspondent q-vector. All the other possible q-vectors are tested to calculate their $RSS$ and the q-vector giving the lowest $RSS$ is chosen to replace the original one. That is why we name this method minRSS. The Q-matrix is changed and the whole process repeated, but the previously changed q-vector is eliminated from the next round of running. The whole procedure terminates until the $RSS$ for each item no longer changes.
 This method  was shown by \citeA{wang2015consistency} to yield good performance under different underlying conjunctive models.
 
-\subsection{maxDiff}\label{sec:maxdiff}
+\subsection{maxDiff}
 Under the setting of DINA model, for every item $j$, there are two model parameters, slip $s_j$ and guess $g_j$. \citeA{de2008empirically} proposed that a correctly specified q-vector for item $j$ should maximize the difference of probabilities of correct response between examinees who have all the required attributes and those who do not. That is, $q_j$ is the correct q-vector if
 \begin{equation} 
 \begin{split}
@@ -116,7 +67,7 @@ q_j & =\argmax_{\alpha _l}[P(X_j=1|\xi_{ll'}=1)-P(X_j=1|\xi_{ll'}=0)]
 where $\xi_{ll'}=\prod_{k=1}^{K}\alpha_{l'k}^{\alpha_{lk}}$ for $K$ total number of skills. An interesting observation is that since $P(X_j=1|\xi_{ll'}=1)=1-s_j$ and $P(X_j=1|\xi_{ll'}=0)=g_j$, then $$q_j=\argmax_{\alpha _l}[1-(s_j+g_j)]$$ 
 that is, maximizing the difference is equivalent to minimize the sum of the slip and guess parameters. A natural idea is to test all q-vectors to find the maximum $\delta_{jl}$ but that is computationally expensive. \citeA{de2008empirically} proposed a greedy algorithm that adds skills into a q-vector sequentially. First, $\delta_{jl}$ is calculated for all q-vectors which contains only one skill and the one with biggest $\delta_{jl}$ is chosen. Then, $\delta_{jl}$ is calculated for all q-vectors which contains two skills including the previously chosen one. Again the q-vector with the biggest $\delta_{jl}$ is chosen. This whole process is repeated until no addition of skills increases $\delta_{jl}$. However, this algorithm requires knowing $s_j$ and $g_j$ in advance. For real data, they are calculated by EM (Expectation Maximization) algorithm \cite{de2009dina}.  
 
-\subsection{ALSC}\label{sec:alsc}
+\subsection{ALSC}
 ALSC (Conjunctive Alternating Least Square Factorization) is a common matrix Factorization (MF). \citeA{desmarais2013matrix} proposed to factorize student test results into a Q-matrix and a skils-student matrix with ALSC. 
 
 Contrary to the other two methods, it does not rely on the DINA model as it has no slip and guess parameters.  ALSC decomposes the results matrix $\mathbf{R}_{m \times n}$ of~$m$ items by~$n$ students as the inner product two smaller matrices:
@@ -135,11 +86,6 @@ Then, a new estimate of the Q-matrix, $\mathbf{\hat{Q}}_1$, is again obtained by
 \end{equation}
 And so on until convergence.  Alternating between equations~(\ref{eq:shat}) and~(\ref{eq:qhat}) yields progressive refinements of the matrices~$\mathbf{\hat{Q}}_i$ and ~$\mathbf{\hat{S}}_i$ that more closely approximate~$\mathbf{R}$ in equation~(\ref{eq:nmf}).  The final~$\mathbf{\hat{Q}_i}$ is rounded to yield a binary matrix.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Meta-learning algorithms}
-
-The algorithms described above are three among a larger number of alternative techniques to refine Q-matrices as listed earlier in the introduction.  They were chosen because they are the ones studied \citeA{desmarais2015combining}, and we wish to pursue and compare our results with this work, and because we know they rely on different loss functions that can prove to be complementary.  However, it should be emphasized that the approach is relatively independent from the algorithms involved, as long as they can differenciate and complement themselves.
-
 \subsection{Decision Tree}
 
 Decision tree is a well-know technique in machine learning and it often serves as an ensemble learning algorithm to combine individual models into a more powerful model. It uses a set of feature variables (individual model predictions) to predict a single target variable (output variable). There are several decision tree algorithms, such as ID3 \cite{quinlan1986induction}, C4.5 \cite{quinlan1993c4}, CART \cite{breiman1984classification}. We used \texttt{rpart} function from the R package of the same name \cite{therneau2015rpart}. It implements the CART algorithm. This algorithm divides the learning process into two phases. The first phase is for feature selection, or tree growing, during which the feature variables are chosen sequentially according to Gini impurity \cite{murphy2012machine}. Then in the second phase, the pruning phase, deep branches are split into wider ones to avoid overfitting. 
@@ -157,85 +103,32 @@ A decision tree is a supervised learning technique and therefore requires traini
 \end{tabular}
 
 The other factors considered to help the decision tree to improve prediction are the number of skills per row (SR), number of skills per column (SC). Moreover, a feature named \textit{stickiness} which measures the rigidity of cells under each validation methods. Stickiness represents the rate of a given algorithm's false positives for a given cell of a Q-matrix.  The rate is measured by ``perturbating'' in turn each and every cell of the Q-matrix, and by counting the number of times the cell is a false positive.  The decision tree can use the stickiness factor as an indicator of the reliability of a given Q-matrix refinement algorithm suggested value for a cell.  Obviously, if a cell's stickiness value is high, the reliability of the algorithm's suggestion will be lower.  
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Boosting}
+\section{Boosting}
 
-The current work extends the idea of using a decision tree with another meta-learning technique named boosting.
+The current work extends the idea of using a decision tree, a meta-learning technique, with another meta-learning technique named boosting.
 
-Boosting \cite{schapire2012boosting} is a forward stagewise additive model \cite{murphy2012machine}. It lifts a weak learner into a strong learner. The whole process is sequential. Each time the weak learner is trained, the weights of the mislearned data are increased in the loss function and fed to the next round of training. The final output is a weighted sum of all learners used in this process. That is,
+Boosting is a well known technique in machine learning. It lifts a weak classifier to strong classifier. The whole process is sequential. Each time the classifier is trained, the weights of the misclassified data are increased in the loss function and fed to the next round of training. The final classifier is a weighted sum of all classifiers learned in this process. That is,
 $$ f(x)=\sum\limits_{m=1}^M\alpha_mG_m(x)$$
-in which $G_m(x)$ and $\alpha_m$  are the learners and their correspondent coefficients obtained in the $m$-th step. For a training set of $N$ samples and given loss function $L$, the global loss is
-$$ Loss=\sum\limits_{i=1}^NL(y_i,f(x_i))$$
-Different ways of choosing loss function $L$ yield different boosting algorithm. The most famous algorithm for boosting is Adaboost \cite{freund1997decision}, which is especially set for binary classification problem and uses exponential loss. 
-
-Boosting has had stunning empirical success \cite{caruana2006empirical} and it can be interpreted as a form of gradient descent in function space \cite{breiman1998arcing}. More detailed explanation and analysis of boosting can be found in \citeA{buhlmann2007boosting}and \citeA{hastie2009elements}. 
-
-The Adaboost algorithm is used in this research to improve the results obtained by \citeA{desmarais2015combining}. The results are reported in section~\ref{sec:result}.
+in which $G_m(x)$ and $\alpha_m$  are the classifier and its correspondent coefficient obtained in the $m$-th step. The most famous algorithm for boosting is Adaboost \cite{freund1997decision} and it is used in this research to improve the result obtained by \citeA{desmarais2015combining}. The result is reported in section~\ref{sec:result}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Methodology and Performance Criterion}
 
-The general methodology consists in inserting one or many \textit{perturbations} in a Q-matrix and to apply the three algorithms described in sections~\ref{sec:minrss} to~\ref{sec:alsc} to recover the original non perturbated matrix.  The \textit{stickiness} factor is computed over each matrix and each algorithm by this perturbation process based on a single perturbation at a time and for each cell of the matrix in turn.  For example, for a $3\times 11$ matrix, the stickiness of cell~$(i,j)$ will be $FP_{i,j}/32$, where~$FP_{i,j}$ is the number of times that this cell was a false positive when each of the other is perturbated in turn.
+To estimate the ability of an algorithm to validate a Q-matrix, we perturbate a ``correct'' Q-matrix and verify if the algorithm is able to recover this correct matrix by identifying the cells that were perturbated while avoiding to classify unperturbated cells as perturbated.    In this experiment, only one perturbation is introduced.  For synthetic data, the ``correct'' matrix is known and is the one used in the generation of the data.  For real data, we assume the expert is the correct one, albeit it may contain errors.
 
-\subsection{Adaboost}
-We applied Adaboost on the the decision tree strategy and test it on both synthetic and real data. In this experiment, only one perturbation is introduced.  For synthetic data, the ``correct'' matrix is known and is the one used in the generation of the data.  For real data, we assume the expert is the correct one, albeit it may contain errors.
-\subsection{Multi-perturbation}
-In this part, we trained the decision tree using the method described in \citeA{desmarais2015combining}, that is using the synthetic data with only one perturbation introduced. But we test the decision tree on data that has multiple perturbations.
-\subsection{Performance criterion}
-In order to measure the performance of the Q-matrix refinement, we borrow the notion of \textit{recall} and \textit{precision}, akin to \citeA{desmarais2015combining}, which allows us to use the F-score for the combined performance assessment. However, \citeA{desmarais2015combining} studied only single perturbations and their measure of precision does not extend well to multiple perturbations. We introduce a new measure for the precision criterion below, which we will name r-precision for ``refinement precision''.
-
-Let us define the following four categories of correct and incorrect classifications:
+In order to use standard performance measure, we define the following categories of correct and incorrect classifications as the number of:
 \begin{compactitem}
-\item \textbf{True Positives (TP)}: perturbed cell correctly changed
+\item \textbf{True Positives (TP)}: perturbed cell correctly recovered
 \item \textbf{True Negatives (TN)}: non perturbed cell left unchanged
-\item \textbf{False Positives (FP)}: non perturbed cell incorrectly changed
+\item \textbf{False Positives (FP)}: non perturbed cell incorrectly recovered
 \item \textbf{False Negatives (FN)}: perturbed cell left unchanged
 \end{compactitem}
-We define recall as the correct recovery of perturbed cells:
- $$ \mathrm{recall}=\frac{\textrm{TP}}{\textrm{TP}+\textrm{FN}}$$
-Precision applies to the non perturbed cells.  We do not use the standard measure $TP / (TP + FP)$ because it does not provide a strong enough penalty for false positives. Suggesting incorrect changes to non perturbed cells are in practice disrupting to an expert who wants to refine a Q-matrix, even in small numbers.  For eg., suggesting 5 incorrect changes on a $11\times 3$ matrix containing 30~unperturbed cells still gives a precision score of~0.83 (25/30 of the non perturbed cells are correctly left unchanged), but it considerably undermines the value of the recommended changes.
 
-We therefore define a function that better reflects the utility of refinements with regards to FP and name the measure \textit{r-precision}:
-\newcommand\rprec{\operatorname{r-precision}}
-\begin{align}
-\rprec & =  f(x, p, n, \delta) \label{eq:r-precision} \\
-f(x, p, n, \delta) & =  1- \left( 1 +  \mathrm{exp}\left( \frac{-\delta (x/p - 1)}{x(1-x/(n-p))} \right) \right)^{-1} \nonumber
-\end{align}
-where:
-\begin{compactitem}
-\item[$x$:] number of FP
-\item[$p$:] number of perturbations
-\item[$n$:] total number of cells of the Q-matrix
-\item[$\delta$:] slope factor to adjust the rate of penalty on r-precision as a function of the number of FP
-\end{compactitem}
-
-\begin{figure}
-  \centerline{\includegraphics[width=\columnwidth]{r-precision-measure.pdf}}
-  \caption{R-precision as a function of False Positives from equation \ref{eq:r-precision}}
-  \label{fig:r-precision}
-\end{figure}
-
-Figure \ref{fig:r-precision} shows the r-precision as a function of the number of FP for different number of perturbations, $p$, and under different~$\delta$ parameters.  R-precision is 1 when no FP are introduced, and 0 when all non perturbated cells are suggested for change.  The x-axis stops at~15 since the number of FP rarely gets over~10 under any condition.  When the number of FP is equal to the number of perturbations, r-precision is set to be 0.5. The $\delta$ parameter sets the rate at which the r-precision is penalized as a function of FP.
-
-The $\delta$ values used in this experiment correspond to the ones in figure~\ref{fig:r-precision}:
-\begin{equation*}
-\delta = \left\lbrace 
-\begin{array}{lll}
-  1 & \mathrm{if} & x \leq 4\\
-  0.5 & \mathrm{if} & x > 4\\
-\end{array}
-\right.
-\end{equation*}
-
-The choice of the shape of equation~(\ref{eq:r-precision})'s function $f$ and of $\delta$ values are judgment calls and they reflect the authors assessment of the r-precision penalty.  As a comparison, if we had 4~FP for a single perturbation, under the standard definition we get $\mathrm{\rprec}=28/32=87.5\%$ for a $11 \times 3$ Q-matrix. Under the current definition, we get $\mathrm{\rprec}=f(4,1,33,1)=30\%$, the later figure representing a much more reasonable assessment of the utility of having that number of FP for a single perturbation Q-matrix.
-%But regardless of the values, the choice does not substantially affect relative performance of the algorithms studied and the general conclusions.
-
-Based on the above definitions of r-precision and recall, an $F_\beta$-score is used:
-$$ F_\beta=(1+\beta^2)\cdot \frac{\rprec \cdot \mathrm{recall}}{\beta^2\rprec + \mathrm{recall}}$$
-in which we set $\beta=1$ to give equal weights to r-precision and recall, that is, the F1-score. Notice that the values of accuracy are close in the result of multi-perturbation experiment for each number of perturbation and so is F1-score. Therefore, we applied the logit function on accuracy and F1-score in order to amplify the visual difference. The logit function is defined as
-$$ \mathrm{logit}(p)=\log\left(\frac{p}{1-p}\right) $$
-
+In order to give equal weight to perturbed and unperturbed cells, we use an F-score. The F-score is defined as
+$$ F=2\cdot \frac{precision \cdot recall}{precision + recall}$$
+		$$ precision=\frac{\textrm{TP}}{\textrm{TP}+\textrm{FP}}$$
+		$$ recall=\frac{\textrm{TP}}{\textrm{TP}+\textrm{FN}}$$
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Dataset}
@@ -361,36 +254,15 @@ The results of applying Adaboost over the decision tree (DT) are reported in tab
 
 Let us focus on the F-Score which is the most informative since it combines results of the perturbed and non perturbed cells of the Q-matrix.  For synthetic data, the error reduction of boosting over the gain from the decision tree is substantially improved for all Q-matrices. The range of improvement is from 7\% to 100\%.  For real data, two of the four Q-matrices show substantial improvements of around 40\%, whereas the other two show no improvements, even a decrease of 9\% for Q-matrix~3 which is characterized by a single skill per item.  Note however that we assume the expert Q-matrices are correct and that violation of this assumption could negatively affect some of the Q-matrices scores for real data.
 
-The results of multi-perturbation experiment are reported in figures \ref{fig:acc-pert}, \ref{fig:acc-non-pert} and \ref{fig:realf}. 
-
-\begin{figure*}
-  \centering
-    \includegraphics[width=0.75\textwidth]{real_pert_acc.pdf}
-  \caption{Logit accuracy for perturbated cells.}\label{fig:acc-pert}
-\end{figure*}
-
-\begin{figure*}
-  \centering
-    \includegraphics[width=0.75\textwidth]{real_nonpert_acc.pdf}
-  \caption{Logit accuracy for non-perturbated cells of real data.}\label{fig:acc-non-pert}
-\end{figure*}
-
-\begin{figure*}
-  \caption{Logit F1-score for real data.}
-  \centering
-    \includegraphics[width=0.75\textwidth]{real_Fscore.pdf}\label{fig:realf}
-\end{figure*}
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusion}
 
-This study shows that the gain obtained from combining the output of multiple Q-matrix refinement algorithms with a decision tree can be further improved with boosting.  The results for synthetic data show an F1-score error reduction of close to 50\% on average for all four Q-matrices, and a 24\% reduction for real data.  
+This study shows that the gain obtained from combining the output of multiple Q-matrix refinement algorithms with a decision tree can be further improved with boosting.  The results for synthetic data show an F-score error reduction of close to 50\% on average for all four Q-matrices, and a 24\% reduction for real data.  
 
 An important advantage of the meta-learning approach outlined here is that it can apply to any combination of algorihtms to validate Q-matrices.  Future work could look into combining more than the three algorithms of this study, and add new algorithms that potentially outperform them. And based on the current results, we would expect to make supplementary gains over any of them.
 
-The experiment on multi-perturbation shows that our ensembling learning techniques are quite stable as the number of perturbations increases. It also confirms our hypothesis that 
-training on one-perturbated cell can contribute to solve the multi-perturbation problems... [to complete]
+However, an important category of data over which we would like to apply this approach is for dynamic student performance data, where learning occurs.  Approach such as \citeA{matsudamachine2015} which combines ... as well as \citeA{durand2015evaluation} ... [to complete]
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \balance
