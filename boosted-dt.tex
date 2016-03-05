@@ -36,7 +36,7 @@ In recent years, substantial improvements were obtained in the effectiveness of 
 \section{Introduction}
 A Q-matrix, as proposed by Tatsuoka \cite{tatsuoka1983rule}, is a term commonly used in the literature of psychometrics and cognitive modeling that refers to a binary matrix which shows a correspondence between items and their latent attributes. Items can be questions or exercises proposed to students, and latent attributes are skills needed to succeed these items. Usually, a Q-matrix is defined by a domain expert. However, this task is non trivial and there might be errors, which in turn will result in erroneous diagnosis of students knowledge states \cite{rupp2008effects,madison2015effects}. Therefore, better means to validate a Q-matrix is a highly desirable goal.
 
-A fair number of algorithms have emerged in the last decade to validate an expert given Q-matrix based on empirical data \cite<see for eg.~recent work from>{chen2015statistical,de2015general}.  \citeA{desmarais2015combining} showed that Q-matrix validation algorithms can be combined using an ensemble learning technique.  They used a decision tree and the results show a substantial and systematic performance gain over the best algorithm, in the range of 50\% error reduction for real data, even though the best algorithm is not always the same for different Q-matrices.  We pursue this work along the lines of using ensemble learning, or meta learning techniques, this time using boosting over the decision tree.
+A fair number of algorithms have emerged in the last decade to validate an expert given Q-matrix based on empirical data \cite<see for eg.~recent work from>{chen2015statistical,de2015general,durand2015evaluation}.  \citeA{desmarais2015combining} showed that Q-matrix validation algorithms can be combined using an ensemble learning technique.  They used a decision tree and the results show a substantial and systematic performance gain over the best algorithm, in the range of 50\% error reduction for real data, even though the best algorithm is not always the same for different Q-matrices.  We pursue this work along the lines of using ensemble learning, or meta learning techniques, this time using boosting over the decision tree.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{\raggedright Three techniques to Q-matrix validation}
@@ -46,26 +46,13 @@ Our approach relies on meta-learning algorithm whose principle is to take the ou
 \subsection{minRSS}
 The first technique is from \citeA{chiu2013nonparametric}.
 
-For a given Q-matrix, there is an ideal response pattern for a given a student skills mastery profile. This ideal response pattern only relies on Q-matrix given student profile. That is, if there are no slip and guess factors, then the response pattern for every category of student profile is fixed. The difference between the real response pattern and the ideal response pattern represents a measure of fit for the Q-matrix.  The most common metric for binary data is Hamming distance, that is
-$$ d_h(r,\eta)=\sum_{j=1}^{J}|r_j-\eta_j|$$
-where $r$ is the real response vector while $\eta$ is the ideal response vector. $J$ is the number of latent skills. \cite{chiu2013nonparametric} considered a more refined metric. The idea is if an item has a smaller variance (or entropy), then it should be given higher weight. The formula is
-$$ d_{\omega h}(r,\eta)=\sum_{j=1}^{J}\frac{1}{\bar{p_j}(1-\bar{p_j})}|r_j-\eta_j|$$
-where $\bar{p_j}$ is the proportion of correct answers of item $j$. Equipped with this metric, we can find the most approximate ideal response matrix and then find the corresponding profile matrix $A$. First, a squared sum of errors for each item $k$ can be computed by
+For a given Q-matrix, there is an ideal response pattern for a given a student skills mastery profile. This ideal response pattern only relies on Q-matrix given student profile. That is, if there are no slip and guess factors, then the response pattern for every category of student profile is fixed. The difference between the real response pattern and the ideal response pattern represents a measure of fit for the Q-matrix, typically the Hamming distance.  \citeA{chiu2013nonparametric} considered a more refined metric. The idea is if an item has a smaller variance (or entropy), then it should be given higher weight.  Equipped with this metric, we can find the most approximate ideal response matrix and then find the corresponding profile matrix $A$. First, a squared sum of errors for each item $k$ can be computed by
 $$ RSS_k=\sum_{i=1}^{N}(r_{ik}-\eta_{ik})^2$$
-where $N$ is the number of respondents. Then, the item with the highest $RSS$ is chosen to update its correspondent q-vector. All the other possible q-vectors are tested to calculate their $RSS$ and the q-vector giving the lowest $RSS$ is chosen to replace the original one. That is why we name this method minRSS. The Q-matrix is changed and the whole process repeated, but the previously changed q-vector is eliminated from the next round of running. The whole procedure terminates until the $RSS$ for each item no longer changes.
+where $r$ is the real response vector while $\eta$ is the ideal response vector, and $N$ is the number of respondents. Then, the item with the highest $RSS$ is chosen to update its correspondent q-vector. All the other possible q-vectors are tested to calculate their $RSS$ and the q-vector giving the lowest $RSS$ is chosen to replace the original one.  The Q-matrix is changed and the whole process repeated, but the previously changed q-vector is eliminated from the next round of running. The whole procedure terminates until the $RSS$ for each item no longer changes.
 This method  was shown by \citeA{wang2015consistency} to yield good performance under different underlying conjunctive models.
 
 \subsection{maxDiff}
-Under the setting of DINA model, for every item $j$, there are two model parameters, slip $s_j$ and guess $g_j$. \citeA{de2008empirically} proposed that a correctly specified q-vector for item $j$ should maximize the difference of probabilities of correct response between examinees who have all the required attributes and those who do not. That is, $q_j$ is the correct q-vector if
-\begin{equation} 
-\begin{split}
-q_j & =\argmax_{\alpha _l}[P(X_j=1|\xi_{ll'}=1)-P(X_j=1|\xi_{ll'}=0)]
-\\
-& =\argmax_{\alpha _l}[\delta_{jl}]
-\end{split}
-\end{equation}
-where $\xi_{ll'}=\prod_{k=1}^{K}\alpha_{l'k}^{\alpha_{lk}}$ for $K$ total number of skills. An interesting observation is that since $P(X_j=1|\xi_{ll'}=1)=1-s_j$ and $P(X_j=1|\xi_{ll'}=0)=g_j$, then $$q_j=\argmax_{\alpha _l}[1-(s_j+g_j)]$$ 
-that is, maximizing the difference is equivalent to minimize the sum of the slip and guess parameters. A natural idea is to test all q-vectors to find the maximum $\delta_{jl}$ but that is computationally expensive. \citeA{de2008empirically} proposed a greedy algorithm that adds skills into a q-vector sequentially. First, $\delta_{jl}$ is calculated for all q-vectors which contains only one skill and the one with biggest $\delta_{jl}$ is chosen. Then, $\delta_{jl}$ is calculated for all q-vectors which contains two skills including the previously chosen one. Again the q-vector with the biggest $\delta_{jl}$ is chosen. This whole process is repeated until no addition of skills increases $\delta_{jl}$. However, this algorithm requires knowing $s_j$ and $g_j$ in advance. For real data, they are calculated by EM (Expectation Maximization) algorithm \cite{de2009dina}.  
+The maxDiff algorithm relies on the DINA model, for every item $j$, there are two model parameters, slip $s_j$ and guess $g_j$. \citeA{de2008empirically} proposed that a correctly specified q-vector for item $j$ should maximize the difference of probabilities of correct response between examinees who have all the required attributes and those who do not. A natural idea is to test all q-vectors to find that maximum, but that is computationally expensive. \citeA{de2008empirically} proposed a greedy algorithm that adds skills into a q-vector sequentially. Assuming $\delta_{jl}$ represents the difference to maximize, the first step is to calculate $\delta_{jl}$ for all q-vectors which contains only one skill and the one with biggest $\delta_{jl}$ is chosen. Then, $\delta_{jl}$ is calculated for all q-vectors which contains two skills including the previously chosen one. Again the q-vector with the biggest $\delta_{jl}$ is chosen. This whole process is repeated until no addition of skills increases $\delta_{jl}$. However, this algorithm requires knowing $s_j$ and $g_j$ in advance. For real data, they are calculated by EM (Expectation Maximization) algorithm \cite{de2009dina}.  
 
 \subsection{ALSC}
 ALSC (Conjunctive Alternating Least Square Factorization) is a common matrix Factorization (MF). \citeA{desmarais2013matrix} proposed to factorize student test results into a Q-matrix and a skils-student matrix with ALSC. 
@@ -86,7 +73,10 @@ Then, a new estimate of the Q-matrix, $\mathbf{\hat{Q}}_1$, is again obtained by
 \end{equation}
 And so on until convergence.  Alternating between equations~(\ref{eq:shat}) and~(\ref{eq:qhat}) yields progressive refinements of the matrices~$\mathbf{\hat{Q}}_i$ and ~$\mathbf{\hat{S}}_i$ that more closely approximate~$\mathbf{R}$ in equation~(\ref{eq:nmf}).  The final~$\mathbf{\hat{Q}_i}$ is rounded to yield a binary matrix.
 
-\subsection{Decision Tree}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Decision Tree}
+
+The three algorithms for Q-matrix refinement described in the last section are to be combined to yield with a decision tree to obtain an improved refinement recommendation, and further improved by boosting.  We describe the decision tree before moving on to the boosting method.
 
 Decision tree is a well-know technique in machine learning and it often serves as an ensemble learning algorithm to combine individual models into a more powerful model. It uses a set of feature variables (individual model predictions) to predict a single target variable (output variable). There are several decision tree algorithms, such as ID3 \cite{quinlan1986induction}, C4.5 \cite{quinlan1993c4}, CART \cite{breiman1984classification}. We used \texttt{rpart} function from the R package of the same name \cite{therneau2015rpart}. It implements the CART algorithm. This algorithm divides the learning process into two phases. The first phase is for feature selection, or tree growing, during which the feature variables are chosen sequentially according to Gini impurity \cite{murphy2012machine}. Then in the second phase, the pruning phase, deep branches are split into wider ones to avoid overfitting. 
 
@@ -106,11 +96,15 @@ The other factors considered to help the decision tree to improve prediction are
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Boosting}
 
-The current work extends the idea of using a decision tree, a meta-learning technique, with another meta-learning technique named boosting.
+The current work extends the idea of using a decision tree with another meta-learning technique named boosting.
 
-Boosting is a well known technique in machine learning. It lifts a weak classifier to strong classifier. The whole process is sequential. Each time the classifier is trained, the weights of the misclassified data are increased in the loss function and fed to the next round of training. The final classifier is a weighted sum of all classifiers learned in this process. That is,
+Boosting\cite{schapire2012boosting} is a forward stagewise additive model\cite{murphy2012machine}. It lifts a weak learner into a strong learner. The whole process is sequential. Each time the weak learner is trained, the weights of the mislearned data are increased in the loss function and fed to the next round of training. The final output is a weighted sum of all learners used in this process. That is,
 $$ f(x)=\sum\limits_{m=1}^M\alpha_mG_m(x)$$
-in which $G_m(x)$ and $\alpha_m$  are the classifier and its correspondent coefficient obtained in the $m$-th step. The most famous algorithm for boosting is Adaboost \cite{freund1997decision} and it is used in this research to improve the result obtained by \citeA{desmarais2015combining}. The result is reported in section~\ref{sec:result}.
+in which $G_m(x)$ and $\alpha_m$  are the learners and their correspondent coefficients obtained in the $m$-th step. For a training set of $N$ samples and given loss function $L$, the global loss is
+$$ Loss=\sum\limits_{i=1}^NL(y_i,f(x_i))$$
+Different ways of choosing loss function yield different boosting algorithm. The most famous algorithm for boosting is Adaboost \cite{freund1997decision}, which is especially set for binary classification problem and uses exponential loss. 
+
+Boosting has stunning empirical success \cite{caruana2006empirical} and it can be interpreted as a form of gradient descent in function space \cite{breiman1998arcing}. More detailed explanation and analysis of boosting can be found in \citeA{buhlmann2007boosting} and \citeA{hastie2009elements}. Adaboost algorithm is used in this research to improve the results obtained by \citeA{desmarais2015combining}. The results are reported in section~\ref{sec:result}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Methodology and Performance Criterion}
@@ -127,11 +121,7 @@ In order to use standard performance measure, we define the following categories
 
 In order to give equal weight to perturbed and unperturbed cells, we use an F-score. The F-score is defined as
 $$ F=2\cdot \frac{precision \cdot recall}{precision + recall}$$
-		$$ precision=\frac{\textrm{TP}}{\textrm{TP}+\textrm{FP}}$$
-		$$ recall=\frac{\textrm{TP}}{\textrm{TP}+\textrm{FN}}$$
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Dataset}
+In which $precision$ is calculated by the model accuracy on non-perturbated cell while $recall$ is calculated by the model accuracy on perturbated cell.
 
 \begin{table}
   \caption{Q-matrix for validation}\label{tab:qm}
@@ -154,6 +144,9 @@ QM4 & 3 & 11 & 536 & {Data driven, SVD based} \\
   	\end{tabular}
 \end{table}
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Dataset}
 For the sake of comparison, we use the same datasets as the ones used in \citeA{desmarais2015combining}.  Table~\ref{tab:qm} provides the basic information and source of each dataset. 
 
 
@@ -168,12 +161,12 @@ For the sake of comparison, we use the same datasets as the ones used in \citeA{
 \newcommand*\rot{\multicolumn{1}{R{60}{1em}}}% no optional argument here, please!
 \newcommand{\rottwo}[2]{\multicolumn{1}{R{60}{#1}}{#2}}% no optional argument here, please!
 
-\begin{table}
-\caption{Results for synthetic data}\label{tab:res:synth}
-\centering
+\begin{table*}
+\begin{minipage}{\columnwidth}
+\caption{\protect\raisebox{0pt}[0.5pt][2ex]{Results for synthetic data}}\label{tab:res:synth}
 \begin{tabular}{ccc@{\extracolsep{4pt}}cc@{\extracolsep{2pt}}>{(}c<{\%)}c@{\extracolsep{2pt}}>{(}D{.}{.}{1}<{\%)}}
-  \hline
-  \hline
+\hline
+\hline
 & \multicolumn{3}{c}{\raisebox{0pt}[2.5ex]{\textbf{Individual}}} & \multicolumn{4}{c}{\textbf{Ensemble}}\\
 \cline{2-4} \cline{5-8}
 \raisebox{0pt}[2.5ex]{\textbf{QM}} & {\rot{\textbf{minRSS}}} & {\rot{\textbf{maxDiff}}} & {\rot{\textbf{ALSC}}} & \multicolumn{2}{c}{\rottwo{4em}{\parbox{4em}{\textbf{DT (\%Gain)}}}} & \multicolumn{2}{c}{\rottwo{4em}{\parbox{4em}{\textbf{BDT (\%Gain)}}}} \\   
@@ -202,16 +195,15 @@ For the sake of comparison, we use the same datasets as the ones used in \citeA{
  2 & 0.128 & 0.348 & 0.392 & 0.902  & 83.8 & 0.947  & 46.1 \\
  3 & 0.955 & 0.337 & 0.831 & 0.997  & 93.5 & 1.000  & 100.0 \\ 
  4 & 0.934 & 0.522 & 0.536 & 0.976  & 64.0 & 0.984  & 33.6 \\
-  \hline
+\hline
 \raisebox{0pt}[2.5ex]{$\mathbf{\overline{X}}$} & 0.725 & 0.429 & 0.571 & 0.961  & 78.4 & 0.975  & 46.8 \\ 
-  \hline
+\hline
 \hline
 \end{tabular}
-\end{table}
-
-\begin{table}
-\caption{Results for real data}\label{tab:res:real}
-\centering
+\end{minipage}
+\hfill
+\begin{minipage}{\columnwidth}
+\caption{\protect\raisebox{0pt}[0.5pt][2ex]{Results for real data}}\label{tab:res:real}
 \begin{tabular}{c@{}c@{\hspace{1ex}}c@{\extracolsep{4pt}}cc@{\extracolsep{2pt}}>{(}D{.}{.}{1}<{\%)}@{\hspace{5ex}}c@{\extracolsep{2pt}}>{(}D{.}{.}{1}<{\%)}}
   \hline
   \hline
@@ -248,7 +240,8 @@ For the sake of comparison, we use the same datasets as the ones used in \citeA{
   \hline
 \hline
 \end{tabular}
-\end{table}
+\end{minipage}
+\end{table*}
 
 The results of applying Adaboost over the decision tree (DT) are reported in table~\ref{tab:res:synth} for synthetic data and Table~\ref{tab:res:real} for real data. The individual results of each algorithm are reported (minRSS, maxDiff, and ALSC), along with the decision tree (DT) and the boosted decision tree (BDT).  Different improvement over baselines are reported as ``\%Gain'': the DT improvement over the \textbf{best} of the three individual algorithm, and the BDT improvement of the BT performance.
 
@@ -262,7 +255,7 @@ This study shows that the gain obtained from combining the output of multiple Q-
 
 An important advantage of the meta-learning approach outlined here is that it can apply to any combination of algorihtms to validate Q-matrices.  Future work could look into combining more than the three algorithms of this study, and add new algorithms that potentially outperform them. And based on the current results, we would expect to make supplementary gains over any of them.
 
-However, an important category of data over which we would like to apply this approach is for dynamic student performance data, where learning occurs.  Approach such as \citeA{matsudamachine2015} which combines ... as well as \citeA{durand2015evaluation} ... [to complete]
+However, an important category of data over which we would like to apply this approach is for dynamic student performance data, where learning occurs (see for eg.\ \citeNP{matsudamachine2015}).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \balance
